@@ -8,6 +8,7 @@
 <body>
     <?php
         echo "Cipeng";
+        echo "Ferdi Ganteng";
     ?>
 </body>
 </html>
