@@ -6,9 +6,11 @@
     <title>Document</title>
 </head>
 <body>
+    <a href="login.php">Login</a>
     <?php
         echo "Cipeng";
         echo "Ferdi Ganteng";
     ?>
+    
 </body>
 </html>
