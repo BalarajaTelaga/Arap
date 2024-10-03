@@ -2,58 +2,44 @@
 session_start();
 include 'koneksi.php';
 
-// Function to handle login
-function loginSession($conn){
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-        
-        // Fetch the user from the database
-        $query = "SELECT * FROM username WHERE email='$email'";
-        $result = $conn->query($query);
+// Proses pendaftaran
+if (isset($_POST['register'])) {
+    $username = $_POST['username'];
+    $email = $_POST['email'];
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            // Verify password (assuming it’s hashed using password_hash)
-            if (password_verify($password, $row['password'])) { 
-                // Set session
-                $_SESSION['email'] = $row['email'];
-                header('Location: dashboard.php'); // Redirect to dashboard
-                exit();
-            } else {
-                echo "Invalid password.";
-            }
+    // Cek jika email sudah ada
+    $checkEmail = $conn->query("SELECT * FROM users WHERE email = '$email'"); // *Ubah nama tabelnya nanti 
+    if ($checkEmail->num_rows > 0) {
+        $error = "Email sudah terdaftar!";
+    } else {
+        // Masukkan user baru ke database
+        $conn->query("INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$password')");
+        $error = "Pendaftaran berhasil! Silakan login.";
+    }
+}
+
+// Proses login
+if (isset($_POST['login'])) {
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+
+    // Cek user berdasarkan email
+    $result = $conn->query("SELECT * FROM users WHERE email = '$email'"); // *yang ini juga ganti
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['user'] = $user['username'];
+            header('Location: dashboard.php'); // Redirect ke halaman setelah login
+            exit();
         } else {
-            echo "User not found.";
+            $error = "Password salah!";
         }
+    } else {
+        $error = "Email tidak ditemukan!";
     }
 }
 
-// Function to handle registration
-function registerSession($conn){
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['register'])) {
-        $name = $_POST['name'];
-        $email = $_POST['email'];
-        $password = password_hash($_POST['password'], PASSWORD_BCRYPT); // Hash password for security
-        
-        // Insert new user into the database
-        $query = "INSERT INTO users (name, email, password) VALUES ('$name', '$email', '$password')";
-        if ($conn->query($query)) {
-            echo "Registration successful! You can now login.";
-        } else {
-            echo "Error: " . $conn->error;
-        }
-    }
-}
-
-// Call the appropriate function based on form submission
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['login'])) {
-        loginSession($conn);
-    } elseif (isset($_POST['register'])) {
-        registerSession($conn);
-    }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -68,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="container" id="container">
         <!-- Registration Form -->
         <div class="form-container sign-in">
-            <form action="" method="POST">
+            <form method="POST">
                 <h1>Create Account</h1>
                 <div class="social-icons">
                     <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
@@ -86,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <!-- Login Form -->
         <div class="form-container sign-up">
-            <form action="" method="POST">
+            <form method="POST">
                 <h1>Sign In</h1>
                 <div class="social-icons">
                     <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
